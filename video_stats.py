@@ -19,7 +19,7 @@ def get_channel_playlist_id():
         channle_items=data["items"][0]
 
         channel_playlistId=channle_items["contentDetails"]["relatedPlaylists"]["uploads"]
-        print(channel_playlistId)
+        # print(channel_playlistId)
         return channel_playlistId
     except r.RequestException as e:
         print(f"Error fetching channel playlist ID: {e}")
