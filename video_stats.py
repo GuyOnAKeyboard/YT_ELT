@@ -1,5 +1,6 @@
 import requests as r
 import json
+from datetime import date
 import os
 from dotenv import load_dotenv
 
@@ -55,8 +56,54 @@ def get_video_id(playlistId):
         return None
 
 
+def extract_video_data(videoIds):
+    extractedData=[]
+    
+    def batchList(videoListIds,batchSize):
+        for id in range(0,len(videoListIds),batchSize):
+            yield videoListIds[id:id+batchSize]
+    
+    try:
+        for batch in batchList(videoIds,maxResult):
+            videoIdStr=",".join(batch)
+                
+            url=f'{BASE_URL}videos?part=contentDetails&part=snippet&part=statistics&id={videoIdStr}&key={API_KEY}'
+            response = r.get(url)
+            response.raise_for_status()
+            data = response.json()
+            
+
+            for item in data.get('items',[]):
+                video_id=item['id']
+                snippetData=item['snippet']
+                contentDetails=item['contentDetails']
+                statistics=item['statistics']
+                
+                video_data={
+                    "video_id":video_id,
+                    "title":snippetData['title'],
+                    "publishedAt":snippetData['publishedAt'],
+                    "duration":contentDetails['duration'],
+                    "viewCount":statistics.get('viewCount',None),
+                    "likecount":statistics.get('likeCount',None),
+                    "commentCount":statistics.get('commentCount',None),
+                }
+                extractedData.append(video_data)
+                
+        return extractedData
+    except r.RequestException as e:
+        print(f"Error fetching channel playlist ID: {e}")
+        return None
+
+def save_to_json(extractedData):
+    file_path=f'./data/YT_data{date.today()}.json'
+    
+    with open(file_path,'w',encoding='utf-8') as json_outfile:
+        json.dump(extractedData,json_outfile,indent=4,ensure_ascii=False)
+    
 
 if __name__ == "__main__":
    playlistId=get_channel_playlist_id()
    videoIds=get_video_id(playlistId)
-   print(videoIds)
+   extractedData=extract_video_data(videoIds)
+   save_to_json(extractedData)
