@@ -8,7 +8,7 @@ load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
 BASE_URL=os.getenv("BASE_URL")
-channel_handle = 'MrBeast'
+channel_handle = os.getenv("channel_handle")
 maxResult=50
 
 def get_channel_playlist_id():
