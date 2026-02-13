@@ -1,16 +1,19 @@
 import requests as r
 import json
 from datetime import date
-import os
-from dotenv import load_dotenv
+from airflow.decorators import task
+from airflow.models import Variable
 
-load_dotenv()
+# import os
+# from dotenv import load_dotenv
+# load_dotenv()
 
-API_KEY = os.getenv("API_KEY")
-BASE_URL=os.getenv("BASE_URL")
-channel_handle = os.getenv("channel_handle")
+API_KEY = Variable.get("API_KEY")
+BASE_URL=Variable.get("BASE_URL")
+channel_handle = Variable.get("channel_handle")
 maxResult=50
 
+@task
 def get_channel_playlist_id():
     try:
         url=f'{BASE_URL}channels?part=contentDetails&forHandle={channel_handle}&key={API_KEY}'
@@ -27,6 +30,7 @@ def get_channel_playlist_id():
         print(f"Error fetching channel playlist ID: {e}")
         return None
 
+@task
 def get_video_id(playlistId):
     video_ids=[]
     pageToken=None
@@ -55,7 +59,7 @@ def get_video_id(playlistId):
         print(f"Error fetching video IDs: {e}")
         return None
 
-
+@task
 def extract_video_data(videoIds):
     extractedData=[]
     
@@ -95,6 +99,7 @@ def extract_video_data(videoIds):
         print(f"Error fetching channel playlist ID: {e}")
         return None
 
+@task
 def save_to_json(extractedData):
     file_path=f'./data/YT_data{date.today()}.json'
     
